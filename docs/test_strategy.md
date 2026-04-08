@@ -191,6 +191,35 @@ A successful workflow means:
 - failures are visible and handled explicitly rather than silently ignored  
 
 ---
+## Sample Dataset Validation
+
+I also validated the sample dataset provided in the assessment:
+
+```json
+{
+  "users": [
+    { "id": 1, "email": "test1@test.com", "country": "IE" },
+    { "id": 2, "email": "test2@test.com", "country": "US" }
+  ],
+  "orders": [
+    { "id": 101, "userId": 1, "amount": 100 },
+    { "id": 102, "userId": 3, "amount": 200 }
+  ]
+}
+```
+
+### Edge Case Detected
+
+The order with `id = 102` references `userId = 3`, but that user does not exist in the users dataset.
+
+### Why this matters
+
+This is a cross-service consistency defect. Even though the order object is technically valid in structure, it is invalid in business logic because it points to a non-existent user.
+
+### Expected Outcome
+
+This mismatch should be flagged during validation and treated as a critical inconsistency rather than being accepted silently.
+
 
 ## How I Validated Data Consistency Across Services
 
@@ -441,28 +470,6 @@ Optional steps such as enrichment should not block the core workflow if the tran
 ## Conclusion
 
 Chaos and failure testing in this assessment focused on whether the system behaves safely under delay, partial outage, and data inconsistency. The key requirement is not just that failures happen, but that they are visible, controlled, and do not create incorrect business outcomes. In distributed systems, resilience comes from clear boundaries, strong validation, and controlled handling of partial failure.
-
----
-
-# Test Strategy
-
-## System Understanding & Risk Analysis
-(already added)
-
-## End-to-End Workflow Testing
-(already added)
-
-## Advanced API Testing
-(already added)
-
-## Chaos / Failure Testing
-(paste chaos section)
-
-## Observability & Debugging
-(paste this section here)
-
-## Production Scenario
-(next section)
 
 ---
 
