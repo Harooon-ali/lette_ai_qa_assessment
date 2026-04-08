@@ -4,7 +4,6 @@
 - Playwright (UI)  
 - pytest (API)  
 - Python (data validation)
-- 
 
 ### Automated: 
 - login flow
