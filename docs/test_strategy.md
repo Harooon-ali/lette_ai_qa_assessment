@@ -57,71 +57,294 @@ Playwright for UI
 pytest for API + data validation  
 Python script for dataset checks  
 
-### How I Modelled Data Flow Between Non-Integrated Services  
+---
 
-Because these services are independent, I treated them as a logical workflow connected by shared business identifiers such as userId, email, and country. Instead of testing real integration, I simulated cross-service consistency by validating whether output from one service could be reliably used as input to another.  
+# System Understanding & Risk Analysis
 
+## How I Modelled Data Flow Between Non-Integrated Services
 
-Example:
-- login user in ReqRes
-- fetch user profile and extract userId
-- create simulated order in JSONPlaceholder using that userId
-- enrich the user with country data using GraphQL
-- validate the final user/order relationship against dataset rules
+Because these services are independent, I treated them as a logical workflow connected by shared business identifiers such as `userId`, `email`, and `country`. Instead of testing real integration, I simulated cross-service consistency by validating whether output from one service could be reliably used as input to another.
 
-
+**Example workflow:**
+- login user in ReqRes  
+- fetch user profile and extract `userId`  
+- create simulated order in JSONPlaceholder using that `userId`  
+- enrich the user with country data using GraphQL  
+- validate the final user/order relationship against dataset rules  
 
 This approach allowed me to test realistic distributed-system risks even though the services are not natively connected.
 
+---
 
+## Assumptions About System Behavior
 
-### Assumptions About System Behavior
-- ReqRes is treated as the source of truth for user identity.
-- JSONPlaceholder represents an orders service but does not enforce true business validation, so consistency checks must be simulated externally.
-- Countries GraphQL provides enrichment data only, not transactional data.
-- httpbin is used only to simulate reliability issues such as latency or timeout.
-- The Kaggle dataset is used as a validation reference for expected relationships between customers, orders, and payments.
-- A successful workflow means all required identifiers remain logically consistent across services.
+- ReqRes is treated as the source of truth for user identity  
+- JSONPlaceholder represents an orders service but does not enforce true business validation, so consistency checks must be simulated externally  
+- Countries GraphQL provides enrichment data only, not transactional data  
+- httpbin is used only to simulate reliability issues such as latency or timeout  
+- The Kaggle dataset is used as a validation reference for expected relationships between customers, orders, and payments  
+- A successful workflow means all required identifiers remain logically consistent across services  
 
+---
 
-### Single Points of Failure
+## Single Points of Failure
 
-The main single points of failure in this setup are:  
+The main single points of failure in this setup are:
 
-- the user service for identity and authentication
-- the orders service for transaction creation
-- the dependency chain between services when one call relies on another
-- external enrichment through GraphQL when country information is required to complete the workflow
-
-
+- the user service for identity and authentication  
+- the orders service for transaction creation  
+- the dependency chain between services when one call relies on another  
+- external enrichment through GraphQL when country information is required to complete the workflow  
 
 Although the services are separate, the workflow becomes fragile when one dependency fails or returns incomplete data.
 
+---
 
+## Data Inconsistency Risks
 
-### Data Inconsistency Risks
+The biggest inconsistency risks are:
 
-The biggest inconsistency risks are:  
+- a user exists in ReqRes but the order references a different or missing `userId`  
+- a country code is missing or does not map correctly in GraphQL  
+- dataset validation shows missing customer, duplicate order, or payment mismatch  
+- one service returns `200 OK` but the data itself is incomplete or wrong  
 
-- a user exists in ReqRes but the order references a different or missing userId
-- a country code is missing or does not map correctly in GraphQL
-- dataset validation shows missing customer, duplicate order, or payment mismatch
-- one service returns 200 OK but the data itself is incomplete or wrong
+A key example is when a user exists in ReqRes but not in Orders. In that case, I would treat it as a consistency defect and validate whether the workflow blocks, flags, or silently accepts invalid data.
 
+---
 
+## Security Risks
 
-A key example is when a user exists in ReqRes but not in Orders. In that case, I would treat it as a consistency defect and validate whether the workflow blocks, flags, or silently accepts invalid data.   
+The main security risks are:
 
+- broken authentication or missing token enforcement  
+- broken authorization such as accessing another user’s data  
+- replayable API requests without safeguards  
+- unsanitized UI input leading to XSS or malformed data entering the workflow  
 
+---
 
-### Security Risks
+## Top 3 Risks and Why They Matter Most
 
-The main security risks are:  
+### 1. Data inconsistency across services
+This is the most critical because distributed systems often fail at service boundaries rather than within a single component. If user and order data do not match, the system may look healthy at API level while still producing invalid business outcomes.
 
-- broken authentication or missing token enforcement
-- broken authorization such as accessing another user’s data
-- replayable API requests without safeguards
-- unsanitized UI input leading to XSS or malformed data entering the workflow
+### 2. Broken authentication or authorization
+If user data or order data can be accessed without proper validation, the impact is not just functional but also security-related. This is a high-risk failure because it can expose private data.
 
+### 3. Partial dependency failure
+If one service succeeds and another fails, the system may end up in a half-complete state. This is especially dangerous when failures are silent and the workflow appears successful.
 
+These risks are more critical than minor UI bugs because they affect trust, correctness, and security of the whole system.
 
+---
+
+## If This System Scaled to 1M Users, What Would Break First?
+
+At higher scale, the first likely issues would be:
+
+- latency caused by chained dependency calls  
+- timeouts and retries between services  
+- increased inconsistency from partial failures  
+- bottlenecks around order creation and enrichment  
+- weak observability when debugging cross-service issues  
+
+The workflow is most vulnerable where identity, orders, and enrichment depend on each other synchronously.
+
+---
+
+## Where I Would Place Monitoring and Why
+
+I would place monitoring at:
+
+- authentication boundaries to track failed logins and invalid token access  
+- the handoff between user service and orders service to detect mismatched `userId`  
+- GraphQL enrichment calls to track latency, failed lookups, and missing country data  
+- retry and timeout boundaries to identify unstable dependencies  
+- dataset validation checkpoints to catch duplicate, missing, or inconsistent records  
+
+Monitoring should be placed at service boundaries because that is where distributed failures usually become visible.
+
+---
+
+# End-to-End Workflow Testing
+
+## Core Workflow
+
+- user signup/login through ReqRes  
+- fetch user profile  
+- create order in JSONPlaceholder  
+- enrich user or order with country data from GraphQL  
+- validate the final relationship against dataset expectations  
+
+---
+
+## What “Success” Means for This Workflow
+
+A successful workflow means:
+
+- authentication succeeds for valid credentials  
+- the correct user profile is returned  
+- the order is created using the expected `userId`  
+- country enrichment returns valid data  
+- no mismatch exists between user, order, and validation rules  
+- failures are visible and handled explicitly rather than silently ignored  
+
+---
+
+## How I Validated Data Consistency Across Services
+
+I validated consistency by comparing shared identifiers such as:
+
+- `userId` between user and order  
+- `email` where applicable  
+- `country` or `country code` between profile and GraphQL enrichment  
+- dataset-level checks such as whether customer and payment relationships remain valid  
+
+Because the services were not integrated, I treated consistency as a validation layer rather than a system guarantee.
+
+---
+
+## Edge Cases Considered
+
+- user exists but order references a different `userId`  
+- order is accepted with missing or null amount  
+- GraphQL enrichment fails after order creation  
+- a service returns success but the content is incomplete  
+- duplicated orders or duplicated customer references  
+- delayed dependency causing the full workflow to exceed acceptable response time  
+
+---
+
+# Advanced API Testing
+
+For REST APIs, I validated:
+
+- status codes  
+- payload structure and schema  
+- missing required fields  
+- invalid values  
+- pagination behavior  
+- idempotency expectations  
+- negative scenarios, not only happy paths  
+
+To avoid happy-path-only testing, I included:
+
+- invalid payloads  
+- null values  
+- wrong identifiers  
+- missing fields  
+- malformed requests  
+- replay attempts  
+- silent failure checks where the API returns `200 OK` but contains the wrong business data  
+
+---
+
+## Detecting Silent Failures
+
+A silent failure is when the technical response appears successful but the business result is wrong. I looked for this by:
+
+- validating response content, not only status code  
+- checking whether returned `userId` matched the workflow context  
+- comparing response data against expected dataset rules  
+- verifying that required fields were present and logically correct  
+
+For GraphQL, I tested:
+
+- valid queries  
+- invalid queries  
+- query nesting  
+- over-fetching vs under-fetching  
+- whether failures were explicit or silently returned as partial data  
+
+---
+
+# Chaos / Failure Testing
+
+I simulated failure scenarios including:
+
+- API timeout using httpbin delay  
+- user API works but orders API fails  
+- order is created but enrichment fails  
+- mismatched `userId` across systems  
+
+---
+
+## How the System Behaves
+
+In a resilient system, failure in one dependency should:
+
+- not corrupt existing data  
+- not create a false success state  
+- be logged clearly  
+- trigger retry or fallback where appropriate  
+
+If the orders API fails after authentication succeeds, the system should not continue as if checkout completed successfully.
+
+---
+
+## How I Would Improve Resilience
+
+- adding retries with limits for transient failures  
+- using clear validation between service boundaries  
+- surfacing partial failure states explicitly  
+- introducing stronger monitoring around dependency health  
+- adding fallback logic for optional enrichment such as country lookup  
+
+---
+
+# Observability and Debugging
+
+To debug failures, I captured:
+
+- request payloads  
+- response bodies  
+- status codes  
+- timing information  
+- the logical mapping between user and order records  
+
+If logs were missing, I would:
+
+- replay API calls manually  
+- inspect browser network traffic  
+- compare identifiers across each step of the workflow  
+- isolate whether the issue was caused by bad input, dependency failure, or incorrect data mapping  
+
+My debugging approach was to trace the workflow step by step until I identified where expected data diverged from actual data.
+
+---
+
+# Production Scenario: 30 Minutes Before Release
+
+With only 30 minutes before release, I would prioritize the highest-risk paths:
+
+- authentication and login  
+- user profile retrieval  
+- order creation  
+- cross-service consistency between user and order  
+- critical authorization checks  
+- dependency health for required APIs  
+
+---
+
+## Go / No-Go Decision
+
+My go/no-go decision would be based on whether the core workflow is safe and consistent.
+
+### No-Go
+- broken authentication  
+- unauthorized access  
+- order creation failure  
+- mismatched user/order data  
+- dependency failure that causes false success  
+
+### Go
+- minor UI issue with no effect on core workflow  
+- non-critical enrichment issue if fallback exists  
+- low-impact cosmetic defect  
+
+---
+
+## Risks I Would Accept
+
+I would accept low-risk, non-blocking issues that do not affect authentication, order integrity, or user data security. I would not accept risks that undermine correctness, trust, or privacy.
