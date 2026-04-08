@@ -14,11 +14,11 @@ Tools used:
 
 ## Framework Structure
 
-tests/
-api/
-ui/
-clients/
-data/
+tests/  
+api/  
+ui/  
+clients/  
+data/  
 
 ## Automated Scenarios
 
