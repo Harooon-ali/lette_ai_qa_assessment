@@ -1,23 +1,23 @@
 # Performance Report
 
 
-Endpoint:  
+### Endpoint:  
 httpbin delay  
 
 
-Scenario:  
+### Scenario:  
 simulate 50 concurrent users  
 
 
-Metrics:  
+### Metrics:  
 response time  
 timeout rate  
 failure rate  
 
 
-Observation:  
+### Observation:  
 dependency chain increases latency  
 
 
-Bottleneck:  
+### Bottleneck:  
 orders API  
