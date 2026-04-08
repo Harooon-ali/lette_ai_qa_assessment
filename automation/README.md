@@ -1,18 +1,54 @@
 # Automation Framework
 
-## Overview
+## Objective
 
-This automation framework focuses on validating core distributed workflows across UI, APIs, and dataset validation. The goal is to automate high-risk paths rather than every possible scenario.
+The automation approach focuses on validating the highest-risk parts of the distributed workflow using Python and pytest. Since the assessment combines UI, APIs, and data validation, I chose a framework that keeps these concerns separate but reusable.
 
-## Tools Used
+The main goal was to automate stable, repeatable checks around authentication, order creation, and cross-service consistency rather than trying to automate every possible scenario.
 
-- Playwright for UI automation
-- pytest for API testing
-- Python for data validation
-- requests for API client
-- pytest-xdist for parallel execution
+---
 
-## Framework Structure
+## Language and Test Framework
+
+- Python  
+- pytest  
+
+Python was chosen because it is simple, readable, and well suited for API testing, data validation, and test orchestration. pytest provides a clean structure for fixtures, parameterization, assertions, and parallel execution.
+
+---
+
+## Framework Design
+
+The framework is structured into separate layers so UI, API, and data logic are easy to maintain.
+
+### Page Object Model (POM)
+
+For UI testing, I used a Page Object Model structure. This keeps page locators and page actions separate from the actual test logic.
+
+Example:
+- login page contains locators and actions for email, password, and submit  
+- tests only call reusable methods such as `login()` instead of repeating selectors everywhere  
+
+This improves readability and reduces maintenance when UI changes.
+
+---
+
+### API Client Layer
+
+For API testing, I used an API client layer to centralize request logic.
+
+This layer is responsible for:
+- sending requests  
+- setting headers  
+- reusing base URLs  
+- handling authentication tokens  
+- applying retry logic where needed  
+
+This avoids repeating raw request code in each test and makes the framework easier to scale.
+
+---
+
+## Suggested Structure
 
 ```
 automation/
@@ -21,89 +57,116 @@ automation/
     test_order_flow.py
     test_data_consistency.py
 
-  api/
-    client.py
-
   ui/
     pages/
       login_page.py
 
+  api/
+    client.py
+
   data/
     test_data.json
+
+  conftest.py
 ```
 
-## Design Approach
-
-The framework follows:
-
-- Page Object Model for UI tests
-- API client abstraction for REST calls
-- data-driven tests using pytest parameters
-- retry logic for unstable dependencies
-- modular test organization
-
-## Automated Scenarios
-
-The following workflows are automated:
-
-- user login validation
-- fetch user profile
-- create order
-- cross-service data consistency
-- invalid payload handling
-- silent failure detection
+---
 
 ## Retry Logic
 
-Retry logic implemented for:
+Retry logic is included for transient failures such as:
+- timeout  
+- temporary service delay  
+- unstable dependency response  
 
-- API timeout
-- transient failures
-- delayed dependency responses
+Retries are useful for dependency-level instability, but they should be limited so real failures are not hidden.
 
-Retries are limited to avoid masking real failures.
+I would apply retry logic mainly to:
+- delayed API calls  
+- dependency timeouts  
+- non-deterministic transient failures  
 
-## Data Driven Testing
+I would not use retries to mask functional defects like invalid data or authorization failures.
 
-Tests run with:
+---
 
-- valid users
-- invalid users
-- duplicate data
-- missing fields
-- mismatched identifiers
+## Data-Driven Tests
+
+I used data-driven testing to run the same test logic with multiple inputs.
+
+Examples:
+- valid and invalid login credentials  
+- valid and invalid `userId`  
+- missing required fields  
+- duplicate or mismatched data  
+- null and malformed payloads  
+
+This helps expand coverage without duplicating the same test structure repeatedly.
+
+In pytest, this would typically be implemented using parameterization.
+
+---
 
 ## Parallel Execution
 
-Parallel execution enabled using:
+Parallel execution is included using pytest-compatible parallel execution tools such as `pytest-xdist`.
 
-pytest -n auto
+This helps:
+- reduce runtime  
+- execute API tests more efficiently  
+- separate independent scenarios into parallel runs  
 
-This allows concurrent API and validation tests.
+Parallel execution is most suitable for:
+- API tests  
+- validation tests  
+- non-dependent negative scenarios  
 
-## What Was Automated
+I would be more careful with parallel execution for UI tests if shared state or test data collisions are possible.
 
-- core workflow validation
-- API consistency tests
-- data validation checks
-- negative scenarios
+---
 
-## What Was Not Automated
+## What I Chose to Automate
 
-- exploratory security testing
-- performance load testing
-- manual UI exploration
+I chose to automate:
+- login and authentication checks  
+- user retrieval  
+- order creation workflow  
+- cross-service consistency validation  
+- negative API scenarios  
+- data validation checks  
 
-These require environment control and manual validation.
+These are the most repeatable and highest-risk parts of the system. They are also the areas where automation gives the most value for regression testing.
 
-## Why This Structure
+---
 
-This structure allows:
+## What I Chose Not to Automate
 
-- separation of UI and API logic
-- reusable API client
-- scalable test additions
-- maintainable automation suite
-- easy parallel execution
+I did not prioritize automation for:
+- exploratory security testing  
+- deep manual UI exploration  
+- full performance/load testing  
+- all chaos scenarios  
 
-The focus was on stability, readability, and distributed-system validation.
+Reason:
+These areas often require manual analysis, environment control, or specialized tooling beyond a standard pytest workflow.
+
+For example:
+- XSS testing is better supported by targeted manual validation plus security tools  
+- performance testing is better handled by k6 or JMeter  
+- chaos testing often needs controlled fault injection rather than only scripted assertions  
+
+---
+
+## Why I Chose This Framework Structure
+
+I chose this structure because it supports both clarity and scalability.
+
+Benefits:
+- UI logic is separated using POM  
+- API logic is centralized in one client layer  
+- tests remain readable and focused on behavior  
+- data-driven tests improve coverage  
+- retry logic supports resilience testing  
+- parallel execution reduces runtime  
+
+Most importantly, the structure reflects the distributed nature of the system. Instead of treating each test as an isolated script, the framework is organized around reusable components that mirror how real workflows move between UI, APIs, and validation layers.
