@@ -1,3 +1,4 @@
+# Test Strategy
 This system represents a distributed architecture composed of user service, orders service, geo service, and reliability layer. Since these services are not integrated, testing focuses on validating consistency between responses and detecting partial failures.
 
 ## **Primary workflow tested:**
