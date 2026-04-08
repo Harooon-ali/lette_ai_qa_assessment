@@ -96,3 +96,32 @@ The main single points of failure in this setup are:
 
 
 Although the services are separate, the workflow becomes fragile when one dependency fails or returns incomplete data.
+
+
+
+### Data Inconsistency Risks
+
+The biggest inconsistency risks are:  
+
+- a user exists in ReqRes but the order references a different or missing userId
+- a country code is missing or does not map correctly in GraphQL
+- dataset validation shows missing customer, duplicate order, or payment mismatch
+- one service returns 200 OK but the data itself is incomplete or wrong
+
+
+
+A key example is when a user exists in ReqRes but not in Orders. In that case, I would treat it as a consistency defect and validate whether the workflow blocks, flags, or silently accepts invalid data.   
+
+
+
+### Security Risks
+
+The main security risks are:  
+
+- broken authentication or missing token enforcement
+- broken authorization such as accessing another user’s data
+- replayable API requests without safeguards
+- unsanitized UI input leading to XSS or malformed data entering the workflow
+
+
+
