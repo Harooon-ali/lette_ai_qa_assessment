@@ -18,7 +18,8 @@ I tested form inputs using script injection payloads to validate whether user in
 
 Example payload:
 
-<script>alert(1)</script>
+```<script>alert(1)</script>```   
+
 
 
 Expected:
