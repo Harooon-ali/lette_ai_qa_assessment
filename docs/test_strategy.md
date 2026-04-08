@@ -444,6 +444,29 @@ Chaos and failure testing in this assessment focused on whether the system behav
 
 ---
 
+# Test Strategy
+
+## System Understanding & Risk Analysis
+(already added)
+
+## End-to-End Workflow Testing
+(already added)
+
+## Advanced API Testing
+(already added)
+
+## Chaos / Failure Testing
+(paste chaos section)
+
+## Observability & Debugging
+(paste this section here)
+
+## Production Scenario
+(next section)
+
+---
+
+
 # Observability and Debugging
 
 To debug failures, I captured:
