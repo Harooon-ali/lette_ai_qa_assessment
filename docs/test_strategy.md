@@ -488,37 +488,137 @@ My debugging approach was to trace the workflow step by step until I identified 
 
 ---
 
-# Production Scenario: 30 Minutes Before Release
+## Production Scenario
 
-With only 30 minutes before release, I would prioritize the highest-risk paths:
+### Situation
 
-- authentication and login  
-- user profile retrieval  
-- order creation  
-- cross-service consistency between user and order  
-- critical authorization checks  
-- dependency health for required APIs  
+With only 30 minutes before release, I would switch to a risk-based testing approach. The focus would be on validating the most critical workflows that affect system correctness, security, and data integrity.
+
+The goal is not full coverage, but confirming that the core distributed workflow is safe to release.
 
 ---
 
-## Go / No-Go Decision
+### What I Would Test First
 
-My go/no-go decision would be based on whether the core workflow is safe and consistent.
+1. Authentication
+- valid login
+- invalid login
+- access without token
 
-### No-Go
+Reason:
+Authentication is the entry point for the entire workflow.
+
+---
+
+2. User Profile Retrieval
+- fetch valid user
+- fetch invalid user
+- check identifier consistency
+
+Reason:
+User identity is required for downstream order mapping.
+
+---
+
+3. Order Creation
+
+- create order with valid userId  
+- create order with invalid userId  
+- missing amount validation  
+
+Reason:
+Order creation is the core business transaction.
+
+---
+
+4. Cross-Service Consistency
+
+- userId mapping between services  
+- order referencing valid user  
+- enrichment data consistency  
+
+Reason:
+Distributed systems fail at service boundaries.
+
+---
+
+5. Authorization Checks
+
+- access another user’s data  
+- unauthorized API calls  
+
+Reason:
+Security defects are release blockers.
+
+---
+
+6. Dependency Health
+
+- delayed dependency call  
+- timeout behavior  
+- partial failure handling  
+
+Reason:
+Dependencies affect workflow stability.
+
+---
+
+### Go / No-Go Decision
+
+My go/no-go decision would be based on whether the core workflow is stable and consistent.
+
+### No-Go Conditions
+
 - broken authentication  
-- unauthorized access  
+- unauthorized data access  
 - order creation failure  
 - mismatched user/order data  
-- dependency failure that causes false success  
+- dependency failure causing false success  
+- silent failures returning incorrect data  
 
-### Go
-- minor UI issue with no effect on core workflow  
-- non-critical enrichment issue if fallback exists  
-- low-impact cosmetic defect  
+These issues directly impact correctness, security, and business integrity.
 
 ---
 
-## Risks I Would Accept
+### Go Conditions
 
-I would accept low-risk, non-blocking issues that do not affect authentication, order integrity, or user data security. I would not accept risks that undermine correctness, trust, or privacy.
+Release would be acceptable if:
+
+- authentication works correctly  
+- orders can be created successfully  
+- user and order mapping is consistent  
+- dependencies degrade safely  
+- no critical security issues exist  
+
+---
+
+### Risks I Would Accept
+
+I would accept:
+
+- minor UI issues  
+- non-critical enrichment failures  
+- cosmetic defects  
+- low-impact performance degradation  
+
+These do not affect core functionality.
+
+---
+
+### Risks I Would Not Accept
+
+I would not accept:
+
+- incorrect user mapping  
+- broken authentication  
+- security vulnerabilities  
+- data corruption  
+- silent failures  
+
+These create long-term production risk.
+
+---
+
+### Summary
+
+With limited time, I prioritize authentication, order workflow, cross-service consistency, and security. The release decision is based on whether the distributed workflow remains correct and safe under realistic conditions.
