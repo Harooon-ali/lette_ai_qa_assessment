@@ -128,3 +128,10 @@ The objective of this assessment is not only to test features, but to evaluate:
 - risk prioritization
 - cross-service validation
 - real-world QA strategy
+
+
+## Walkthrough
+
+Video walkthrough explaining approach:
+
+[(https://youtu.be/M8mVs6Su43k)]
