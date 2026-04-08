@@ -72,3 +72,27 @@ Example:
 
 
 This approach allowed me to test realistic distributed-system risks even though the services are not natively connected.
+
+
+
+### Assumptions About System Behavior
+- ReqRes is treated as the source of truth for user identity.
+- JSONPlaceholder represents an orders service but does not enforce true business validation, so consistency checks must be simulated externally.
+- Countries GraphQL provides enrichment data only, not transactional data.
+- httpbin is used only to simulate reliability issues such as latency or timeout.
+- The Kaggle dataset is used as a validation reference for expected relationships between customers, orders, and payments.
+- A successful workflow means all required identifiers remain logically consistent across services.
+
+
+### Single Points of Failure
+
+The main single points of failure in this setup are:  
+
+- the user service for identity and authentication
+- the orders service for transaction creation
+- the dependency chain between services when one call relies on another
+- external enrichment through GraphQL when country information is required to complete the workflow
+
+
+
+Although the services are separate, the workflow becomes fragile when one dependency fails or returns incomplete data.
