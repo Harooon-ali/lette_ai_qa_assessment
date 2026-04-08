@@ -57,3 +57,18 @@ Playwright for UI
 pytest for API + data validation  
 Python script for dataset checks  
 
+### How I Modelled Data Flow Between Non-Integrated Services  
+
+Because these services are independent, I treated them as a logical workflow connected by shared business identifiers such as userId, email, and country. Instead of testing real integration, I simulated cross-service consistency by validating whether output from one service could be reliably used as input to another.  
+
+
+Example:
+- login user in ReqRes
+- fetch user profile and extract userId
+- create simulated order in JSONPlaceholder using that userId
+- enrich the user with country data using GraphQL
+- validate the final user/order relationship against dataset rules
+
+
+
+This approach allowed me to test realistic distributed-system risks even though the services are not natively connected.
