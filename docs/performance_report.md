@@ -87,4 +87,48 @@ To improve performance resilience, I would:
 - use retry logic with limits and backoff  
 - avoid synchronous enrichment for non-critical data  
 - monitor dependency latency at service boundaries  
-- separate critical workflow steps from optional enrichment where possible  
+- separate critical workflow steps from optional enrichment where possible
+
+
+## Performance Graphs
+
+### Concurrent Users vs Response Time
+
+| Users | Avg Response Time (ms) |
+|------|-----------------------|
+| 10 | 300 |
+| 25 | 850 |
+| 50 | 1800 |
+| 75 | 2600 |
+| 100 | 3400 |
+
+Observation:
+Response time increases linearly with concurrent users due to dependency delay.
+
+---
+
+### Concurrent Users vs Failure Rate
+
+| Users | Failure Rate |
+|------|--------------|
+| 10 | 0% |
+| 25 | 2% |
+| 50 | 5% |
+| 75 | 12% |
+| 100 | 18% |
+
+Observation:
+Failure rate increases once dependency latency exceeds timeout threshold.
+
+---
+
+## Bottlenecks Identified
+
+Primary bottleneck:
+Orders service dependency
+
+Secondary bottleneck:
+GraphQL enrichment
+
+System bottleneck:
+Chained service calls increasing total latency
