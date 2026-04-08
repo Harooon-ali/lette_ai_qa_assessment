@@ -1,21 +1,62 @@
 # Automation Framework
 
-This assessment uses:
+## Approach
 
-- Playwright for UI workflow automation  
-- Python + pytest for API, data validation, and service-level checks
-- Selenium kept as supporting knowledge for browser automation concepts and future regression coverage
+Automation focuses on:
+- core workflow
+- API validation
+- data consistency
 
+Tools used:
+- Playwright (UI)
+- pytest (API)
+- Python (data validation)
 
+## Framework Structure
 
-### Automated flows
+tests/
+api/
+ui/
+clients/
+data/
 
-- Login flow
-- Form validation flow
-- Basic UI checks on The Internet / ReqRes-related flows
-- API consistency checks through pytest
+## Automated Scenarios
 
-### Includes:
-- retry logic
-- data driven tests
-- modular structure
+- login workflow
+- user retrieval
+- order creation
+- cross-service consistency
+- invalid payload handling
+
+## Retry Logic
+
+Retries added for:
+- timeout
+- transient failures
+- dependency delay
+
+## Data Driven Tests
+
+Parameterized tests using:
+- user dataset
+- order dataset
+- invalid payloads
+
+## Parallel Execution
+
+pytest-xdist used for parallel test runs.
+
+## What I Automated
+
+- core workflow
+- API validation
+- consistency checks
+
+## What I Did Not Automate
+
+- exploratory security testing
+- performance testing
+- chaos testing
+
+Reason:
+These require manual validation and environment control.
