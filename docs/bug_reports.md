@@ -15,3 +15,19 @@ Order accepted
 
 Impact:
 Invalid business data
+
+----
+
+Bug 2: Unauthorized access  
+
+Severity: Critical  
+Accessing another user's data without authentication.  
+
+Steps:  
+Call user endpoint without token  
+
+Expected:  
+401 unauthorized  
+
+Actual:  
+200 response  
