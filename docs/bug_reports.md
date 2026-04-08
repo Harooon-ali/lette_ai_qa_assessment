@@ -1,16 +1,23 @@
 # Bug Reports
 
-### Bug 1: Data inconsistency across services  
+---
+
+## Bug 1: Data inconsistency between user and order
 
 Severity: High  
-Description: Order created with userId not present in user service.   
+Priority: P1
 
-Payload:  
+Description:
+Order created with userId not present in user service.
 
-{ "id":102, "userId":3 }
+Payload:
+{
+"id":102,
+"userId":3
+}
 
 Expected:
-Validation failure
+Validation error
 
 Actual:
 Order accepted
@@ -20,30 +27,60 @@ Invalid business data
 
 ---
 
-### Bug 2: Unauthorized access  
+## Bug 2: Unauthorized user data access
 
 Severity: Critical  
-Description: Accessing another user's data without authentication.  
+Priority: P0
 
-Steps:  
-Call user endpoint without token  
+Description:
+User data accessible without authentication.
 
-Expected:  
-401 unauthorized  
+Steps:
+Call user endpoint without token
 
-Actual:  
-200 response  
+Expected:
+401 unauthorized
 
+Actual:
+200 response
+
+Impact:
+Security breach
 
 ---
 
-### Bug 3: GraphQL silent failure  
+## Bug 3: Silent failure in GraphQL enrichment
 
 Severity: Medium  
-Description: GraphQL returns empty country but API success.  
+Priority: P2
 
-Expected:  
-validation error  
+Description:
+GraphQL returns empty country but API success.
 
-Actual:  
-silent failure  
+Expected:
+Error or fallback
+
+Actual:
+Workflow continues silently
+
+Impact:
+Incorrect enrichment
+
+---
+
+## Bug 4: Timeout not handled
+
+Severity: High  
+Priority: P1
+
+Description:
+Dependency delay causes workflow failure.
+
+Endpoint:
+httpbin delay
+
+Expected:
+Retry or fallback
+
+Actual:
+Failure not handled
