@@ -1,6 +1,7 @@
 # Bug Reports
 
-Bug 1: Data inconsistency across services  
+### Bug 1: Data inconsistency across services  
+
 Severity: High  
 Description: Order created with userId not present in user service.  
 Payload:  
@@ -16,12 +17,12 @@ Order accepted
 Impact:
 Invalid business data
 
-----
+---
 
-Bug 2: Unauthorized access  
+### Bug 2: Unauthorized access  
 
 Severity: Critical  
-Accessing another user's data without authentication.  
+Description: Accessing another user's data without authentication.  
 
 Steps:  
 Call user endpoint without token  
