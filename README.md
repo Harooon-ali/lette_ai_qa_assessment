@@ -4,10 +4,15 @@ This repository demonstrates my approach to testing a distributed system compose
 The focus of this assessment is:
 
 ->cross-service consistency
+
 ->distributed system failure handling
+
 ->API and GraphQL validation
+
 ->AI-style workflow testing
+
 ->performance and security testing
+
 ->automation using Playwright + pytest
 
 ## Structure
