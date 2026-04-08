@@ -32,3 +32,17 @@ Expected:
 
 Actual:  
 200 response  
+
+
+---
+
+### Bug 3: GraphQL silent failure  
+
+Severity: Medium  
+GraphQL returns empty country but API success.  
+
+Expected:  
+validation error  
+
+Actual:  
+silent failure  
