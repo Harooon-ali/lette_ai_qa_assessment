@@ -1,7 +1,8 @@
 # Automation Framework
 
 ### Tools:
-- Playwright (UI)  
+- Playwright (UI)
+- Selenium 
 - pytest (API)  
 - Python (data validation)
 
