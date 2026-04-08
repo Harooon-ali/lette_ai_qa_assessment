@@ -216,38 +216,15 @@ Because the services were not integrated, I treated consistency as a validation 
 
 ---
 
-# Advanced API Testing
+## Advanced API Testing
 
-For REST APIs, I validated:
+For REST APIs, I validated more than basic success responses. My checks included:
 
-- status codes  
-- payload structure and schema  
-- missing required fields  
-- invalid values  
-- pagination behavior  
-- idempotency expectations  
-- negative scenarios, not only happy paths  
-
-To avoid happy-path-only testing, I included:
-
-- invalid payloads  
-- null values  
-- wrong identifiers  
-- missing fields  
-- malformed requests  
-- replay attempts  
-- silent failure checks where the API returns `200 OK` but contains the wrong business data  
-
----
-
-## Detecting Silent Failures
-
-A silent failure is when the technical response appears successful but the business result is wrong. I looked for this by:
-
-- validating response content, not only status code  
-- checking whether returned `userId` matched the workflow context  
-- comparing response data against expected dataset rules  
-- verifying that required fields were present and logically correct  
+- status codes for expected and unexpected requests  
+- schema validation to confirm required fields, types, and structure  
+- idempotency for repeated requests where duplicate actions should not create inconsistent outcomes  
+- pagination behavior, including page boundaries and missing or invalid page parameters  
+- negative testing using invalid payloads, null values, wrong identifiers, and missing required fields  
 
 For GraphQL, I tested:
 
@@ -255,7 +232,64 @@ For GraphQL, I tested:
 - invalid queries  
 - query nesting  
 - over-fetching vs under-fetching  
-- whether failures were explicit or silently returned as partial data  
+- whether failures were returned clearly or silently as partial/null data  
+
+### How I ensured API tests were not just happy-path checks
+
+To avoid only testing successful scenarios, I included:
+- invalid payloads  
+- missing fields  
+- wrong user identifiers  
+- malformed requests  
+- duplicate or replayed requests  
+- null or empty values  
+- delayed dependency responses  
+- cases where APIs returned technically valid responses but incorrect business data  
+
+This helped validate not just whether the API responds, but whether it responds correctly under realistic failure and edge conditions.
+
+### Schema Validation
+
+I validated whether API responses contained the expected fields, correct data types, and consistent structure. A `200 OK` response was not treated as success unless the payload also matched expected schema and business meaning.
+
+Examples:
+- `userId` must be present and valid  
+- required fields such as `amount` should not be missing or null  
+- response body should match expected structure for downstream use  
+
+### Idempotency
+
+For idempotency, I checked whether repeating the same request caused duplicate or inconsistent results. This is especially important for order creation or retried requests after a timeout.
+
+Example:
+- if the same order request is sent twice, the system should not create duplicate business records unless duplication is intentionally allowed  
+
+### Pagination
+
+For endpoints that support pagination, I checked:
+- valid page values  
+- invalid page values  
+- empty pages  
+- boundary conditions such as first page, last page, and out-of-range page numbers  
+
+The goal was to confirm the API returns predictable and consistent results across page navigation.
+
+### Detecting Silent Failures
+
+A silent failure happens when the response looks technically successful but the returned data is wrong or incomplete.
+
+I detected silent failures by:
+- validating response content, not only status code  
+- comparing `userId`, `orderId`, and mapped identifiers across services  
+- checking required fields before treating the workflow as successful  
+- validating response values against dataset rules and expected business logic  
+- flagging cases where the API returns `200 OK` but the data is null, mismatched, or incomplete  
+
+Example:
+- an order response returns `200 OK`, but the `userId` does not match the authenticated user  
+- GraphQL returns `country: null` while the workflow continues as if enrichment succeeded  
+
+This type of validation is important in distributed systems because many failures are logical rather than technical.
 
 ---
 
