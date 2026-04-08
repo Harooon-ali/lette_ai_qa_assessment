@@ -1,91 +1,93 @@
-# Security Testing Findings
+# Security Testing
 
 ## Scope
 
-Security testing focused on:
-- authentication
-- authorization
-- API abuse
-- input validation
-- cross-service data exposure
+Security testing focused on authentication, authorization, API abuse, and input validation across the distributed workflow.
+
+The goal was to identify vulnerabilities that could affect cross-service data integrity and user isolation.
 
 ---
 
-## Finding 1: Broken Authentication
+## XSS Testing
 
-Severity: Critical
+Target:
+https://the-internet.herokuapp.com/
 
-Description:
-User data accessible without token validation.
+Approach:
+I tested form inputs using script injection payloads to validate whether user input is sanitized.
 
-Steps:
-Call user endpoint without authentication token
+Example payload:
+
+<script>alert(1)</script>
+
+
+Expected:
+Input is sanitized or rendered safely
+
+Risk:
+Unsanitized input could allow client-side script execution.
+
+---
+
+## Broken Authentication Testing
+
+I tested access to user endpoints without authentication token.
+
+Scenario:
+- login skipped  
+- user endpoint accessed directly  
 
 Expected:
 401 Unauthorized
 
-Actual:
-200 response returned
+Risk:
+If access is granted, user data can be retrieved without authentication.
 
-Impact:
-Unauthorized data access
+This creates a high-risk security issue in distributed workflows.
 
 ---
 
-## Finding 2: IDOR (Insecure Direct Object Reference)
+## API Abuse — Replay Attack
 
-Severity: Critical
-
-Description:
-User can access another user's order using different userId.
+I tested replaying the same API request multiple times.
 
 Example:
-GET /orders?userId=2
+- create order request captured  
+- resend same request repeatedly  
 
 Expected:
-Access restricted
+Duplicate request blocked or handled safely
 
-Actual:
-Data returned
-
-Impact:
-Cross-user data exposure
+Risk:
+Duplicate orders or repeated transactions.
 
 ---
 
-## Finding 3: Replay Attack
+## Rate Limit Simulation
 
-Severity: High
+I simulated rapid repeated requests to endpoints.
 
-Description:
-Same request can be replayed without validation.
+Goal:
+Check whether the system detects excessive usage.
 
-Impact:
-Duplicate orders
-Duplicate transactions
-
----
-
-## Finding 4: XSS Risk
-
-Severity: Medium
-
-Description:
-Input fields accept unsanitized HTML.
-
-Example:
-<script>alert(1)</script>
-
-Impact:
-Client-side script execution
+Risk:
+Without rate limiting, APIs can be abused causing:
+- denial of service
+- data flooding
+- duplicate records
 
 ---
 
 ## Most Critical Vulnerability
 
-Broken authorization allowing cross-user data access.
+The most critical vulnerability in this system is **broken authorization**.
 
-This impacts:
+Reason:
+If one user can access another user's order data, it impacts:
 - data privacy
 - data integrity
 - user isolation
+- downstream consistency
+
+In a distributed system, this type of failure propagates across services and is harder to detect.
+
