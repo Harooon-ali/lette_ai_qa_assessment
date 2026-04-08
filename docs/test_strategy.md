@@ -295,35 +295,152 @@ This type of validation is important in distributed systems because many failure
 
 # Chaos / Failure Testing
 
-I simulated failure scenarios including:
+## Objective
 
-- API timeout using httpbin delay  
-- user API works but orders API fails  
-- order is created but enrichment fails  
-- mismatched `userId` across systems  
+The goal of chaos and failure testing was to understand how the distributed workflow behaves when one or more dependencies become slow, fail, or return inconsistent data. Since the services in this assessment are independent, failure testing focused on whether the workflow handles interruptions safely rather than whether a real integration recovers automatically.
+
+---
+
+## Failure Scenarios Simulated
+
+### API Timeout
+
+I used the httpbin delay endpoint to simulate a slow downstream dependency:
+
+```text
+https://httpbin.org/delay/3
+```
+
+This was used to observe how the workflow behaves when one service takes longer than expected to respond.
+
+Expected behavior:
+- timeout is detected clearly
+- request does not hang indefinitely
+- failure is logged
+- retry or fallback is triggered where appropriate
+
+---
+
+### Partial Failure
+
+I simulated a scenario where:
+- user API works correctly
+- orders API fails
+
+This represents a common distributed system issue where part of the workflow succeeds but the next dependency does not.
+
+Expected behavior:
+- workflow should not report false success
+- partial completion should be visible
+- system should avoid creating inconsistent state
+- the error should be surfaced clearly
+
+---
+
+### Data Inconsistency
+
+I simulated mismatched identifiers across services, such as:
+- valid user exists in ReqRes
+- order is created with a different or invalid `userId`
+
+Expected behavior:
+- inconsistency should be detected during validation
+- workflow should be flagged or blocked
+- mismatch should not be silently accepted
 
 ---
 
 ## How the System Behaves
 
-In a resilient system, failure in one dependency should:
+In a distributed system, failure in one dependency can affect the full workflow even if other components appear healthy.
 
-- not corrupt existing data  
-- not create a false success state  
-- be logged clearly  
-- trigger retry or fallback where appropriate  
+From a QA perspective, the most important behaviors to validate are:
 
-If the orders API fails after authentication succeeds, the system should not continue as if checkout completed successfully.
+- whether the workflow stops safely when a critical dependency fails
+- whether partial failures are visible or hidden
+- whether retries improve recovery or worsen load
+- whether invalid data continues downstream after a mismatch
+- whether the system returns a technical success while the business outcome is actually wrong
+
+The biggest risk is not always a complete crash. A more dangerous failure is when the system appears successful but leaves data in a broken or inconsistent state.
+
+---
+
+## Example Scenarios
+
+### Scenario 1: Timeout During Dependency Call
+- login succeeds
+- profile is fetched
+- enrichment or downstream call times out
+
+Risk:
+The user may see a failed or incomplete workflow even though the earlier steps succeeded.
+
+### Scenario 2: User API Works, Orders API Fails
+- authentication succeeds
+- user profile is valid
+- order creation fails
+
+Risk:
+The system may incorrectly show checkout progress or leave the workflow half-complete.
+
+### Scenario 3: Mismatched User IDs Across Services
+- user profile returns `userId = 1`
+- order is created with `userId = 3`
+
+Risk:
+Workflow technically completes, but the business data is invalid.
+
+---
+
+## What I Would Expect from a Resilient System
+
+A resilient system should:
+
+- fail clearly when a critical dependency cannot be completed
+- avoid silent corruption of data
+- separate required workflow steps from optional enrichment
+- log the failure with enough detail for debugging
+- retry only transient failures and not logical defects
+- return a user-facing state that reflects the actual workflow outcome
+
+For example, if country enrichment fails but the order is valid, the system may continue with a warning or fallback. But if order creation fails, the system should not continue as if the transaction succeeded.
 
 ---
 
 ## How I Would Improve Resilience
 
-- adding retries with limits for transient failures  
-- using clear validation between service boundaries  
-- surfacing partial failure states explicitly  
-- introducing stronger monitoring around dependency health  
-- adding fallback logic for optional enrichment such as country lookup  
+### 1. Add Retry Logic with Limits
+Retries should be used only for transient failures such as timeout or temporary network instability. They should have limits and backoff so they do not create retry storms.
+
+### 2. Validate Data at Service Boundaries
+Before passing data from one step to the next, validate critical identifiers such as `userId`, `orderId`, and required fields. This reduces the chance of silent downstream corruption.
+
+### 3. Surface Partial Failure Explicitly
+The system should distinguish between:
+- full success
+- partial success
+- hard failure
+
+This is important when optional enrichment fails but the core transaction succeeds.
+
+### 4. Improve Monitoring and Logging
+Monitoring should be added around:
+- timeout and retry behavior
+- user-to-order mapping
+- enrichment failures
+- partial workflow completion
+
+This makes debugging cross-service failures easier.
+
+### 5. Decouple Optional Dependencies
+Optional steps such as enrichment should not block the core workflow if the transaction itself can complete safely. This reduces the impact of non-critical dependency failures.
+
+---
+
+## Conclusion
+
+Chaos and failure testing in this assessment focused on whether the system behaves safely under delay, partial outage, and data inconsistency. The key requirement is not just that failures happen, but that they are visible, controlled, and do not create incorrect business outcomes. In distributed systems, resilience comes from clear boundaries, strong validation, and controlled handling of partial failure.
 
 ---
 
