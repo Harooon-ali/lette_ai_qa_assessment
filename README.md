@@ -12,12 +12,12 @@ The focus of this assessment is:
 
 
 ## Structure
-docs/test_strategy.md → test strategy and risk analysis
-docs/coverage_matrix.md → coverage mapping
-docs/test_cases.md → 30+ test cases
-docs/bug_reports.md → identified issues
-docs/performance_report.md → latency testing
-docs/security_findings.md → vulnerability analysis
+docs/test_strategy.md → test strategy and risk analysis  
+docs/coverage_matrix.md → coverage mapping  
+docs/test_cases.md → 30+ test cases  
+docs/bug_reports.md → identified issues  
+docs/performance_report.md → latency testing  
+docs/security_findings.md → vulnerability analysis  
 
-automation/ → Playwright + pytest framework
+automation/ → Playwright + pytest framework  
 data_validation/ → dataset validation script
