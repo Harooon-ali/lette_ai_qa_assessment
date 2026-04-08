@@ -3,7 +3,8 @@
 ### Bug 1: Data inconsistency across services  
 
 Severity: High  
-Description: Order created with userId not present in user service.  
+Description: Order created with userId not present in user service.   
+
 Payload:  
 
 { "id":102, "userId":3 }
