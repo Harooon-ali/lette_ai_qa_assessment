@@ -1,33 +1,57 @@
-# Test Cases (30+)  
-1 valid login  
-2 invalid login  
-3 empty login  
-4 missing password  
-5 invalid token  
-6 create order valid  
-7 create order invalid user  
-8 create order missing amount  
-9 duplicate order  
-10 invalid userId  
-11 GraphQL valid query  
-12 GraphQL invalid query  
-13 GraphQL nested query  
-14 pagination test  
-15 API schema validation  
-16 null payload  
-17 large payload  
-18 incorrect country mapping  
-19 dataset mismatch  
-20 missing user in dataset  
-21 duplicate user  
-22 replay request  
-23 unauthorized access  
-24 XSS input test  
-25 timeout scenario  
-26 delayed API response  
-27 partial failure orders API  
-28 partial failure user API  
-29 incorrect response with 200 OK  
-30 concurrency test 
-31 idempotency check  
-32 retry logic validation  
+# Test Cases
+
+## Authentication
+
+TC01 valid login  
+TC02 invalid login  
+TC03 empty credentials  
+TC04 invalid token  
+TC05 expired token  
+
+## User Service
+
+TC06 fetch user valid  
+TC07 fetch user invalid id  
+TC08 missing user  
+TC09 duplicate user  
+
+## Orders
+
+TC10 create order valid  
+TC11 create order invalid user  
+TC12 missing amount  
+TC13 duplicate order  
+TC14 invalid payload  
+
+## GraphQL
+
+TC15 valid country query  
+TC16 invalid query  
+TC17 nested query  
+TC18 missing country  
+
+## Data Consistency
+
+TC19 user exists but order missing  
+TC20 order user mismatch  
+TC21 duplicate orders  
+TC22 missing payment  
+
+## API Negative
+
+TC23 null payload  
+TC24 large payload  
+TC25 invalid schema  
+
+## Failure Scenarios
+
+TC26 user API works orders fail  
+TC27 timeout scenario  
+TC28 dependency delay  
+TC29 partial workflow failure  
+
+## Security
+
+TC30 unauthorized access  
+TC31 replay request  
+TC32 XSS input test  
